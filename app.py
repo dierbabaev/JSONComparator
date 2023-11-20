@@ -9,21 +9,57 @@ def main():
         file2_data = json.load(file2)
 
     index_of_mismatch = 0
-    flag = True
     utils_object = Utils()
-    for index, (key, value) in enumerate(file1_data.items()):
+    flag = True
+    index = 0
+    for key in file1_data:
         if key not in file2_data:
             print(f"Поле '{key}' отсутствует во втором файле (строка {index + 1}).")
             flag = False
-        elif not utils_object.compare_two_types(file1_data[key], file2_data[key]):
-            print(f"Типы полей '{key}' не совпадают (строка {index + 1}).")
-            flag = False
-        elif not utils_object.compare_values_of_variables(file1_data[key], file2_data[key]):
-            index_of_mismatch += 1
-            print(f"Значения полей '{key}' не совпадают (строка {index + 1}, внутренний номер строки {index_of_mismatch}).")
-            flag = False
-    if flag == True:
+            break
+        else:
+            if utils_object.check_type(file1_data[key]) != utils_object.check_type(file2_data[key]):
+                print(f"Типы полей '{key}' не совпадают (строка {index + 1}).")
+                flag = False
+                break
+            else:
+                if isinstance(file1_data[key], dict):
+                    flag = compare_json_files(file1_data[key], file2_data[key], index + 1)
+                    if not flag:
+                        break
+                else:
+                    if file1_data[key] != file2_data[key]:
+                        print(f"Значения полей '{key}' не совпадают (строка {index + 1}, внутренний номер строки {index_of_mismatch}).")
+                        index_of_mismatch += 1
+                        flag = False
+                        break
+
+    if flag:
         print("Файлы совпадают")
+
+def compare_json_files(file1_data, file2_data, index=0):
+    index_of_mismatch = 0
+    flag = True
+    for key in file1_data:
+        if key not in file2_data:
+            print(f"Поле '{key}' отсутствует во втором файле (строка {index + 1}).")
+            flag = False
+            break
+
+    if flag:
+        for key in file1_data:
+            if not isinstance(file1_data[key], dict):
+                if file1_data[key] != file2_data[key]:
+                    print(f"Значения полей '{key}' не совпадают (строка {index + 1}, внутренний номер строки {index_of_mismatch + 1}).")
+                    index_of_mismatch += 1
+                    flag = False
+                    break
+            else:
+                flag = compare_json_files(file1_data[key], file2_data[key], index + 1)
+                if not flag:
+                    break
+
+    return flag
 
 if __name__ == "__main__":
     main()
